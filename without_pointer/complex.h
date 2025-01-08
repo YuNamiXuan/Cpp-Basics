@@ -1,46 +1,147 @@
-#ifndef COMPLEX
-#define COMPLEX
+#ifndef COMPLEX_H
+#define COMPLEX_H
 
 #include <iostream>
-// using namespace std;
 
+// Define complex class
 template <typename T>
-class complex
-{
+class Complex {
 public:
-    complex(T r = 0, T i = 0) : re(r), im(i) {}
+    Complex(T r = 0, T i = 0) : re(r), im(i) {}
 
-    complex<T>& operator += (const complex<T>&);
+    Complex<T>& operator+=(const Complex<T>& other);
+    Complex<T>& operator-=(const Complex<T>& other);
 
-    // 在class body内定义完成的函数自动成为inline函数的候选人
-    T real() const { return re; } // 不修改对象的成员函数加上"const"
+    // Member functions that do not modify the object should be marked as const
+    T real() const { return re; }
     T imag() const { return im; }
 
 private:
     T re, im;
 
+    // Friend function to perform addition assignment
     template<typename U>
-    friend complex<U>& __doapl(complex<U>* ths, const complex<U>& r);
+    friend Complex<U>& __dapl(Complex<U>* lhs, const Complex<U>& rhs);
+    template<typename U>
+    friend Complex<U>& __dami(Complex<U>* lhs, const Complex<U>& rhs);
 };
 
+
+// Friend function definition
 template <typename T>
-inline complex<T>& __doapl(complex<T>* ths, const complex<T>& r)
-{
-    ths->re += r.re; // 友元函数可以直接访问类的private类型成员
-    ths->im += r.im;
-    return *ths;
+inline Complex<T>& __dapl(Complex<T>* lhs, const Complex<T>& rhs) {
+    lhs->re += rhs.re;  // Friend functions can directly access private members
+    lhs->im += rhs.im;
+    return *lhs;
 }
 
 template <typename T>
-inline complex<T>& complex<T>::operator+=(const complex<T>& r) 
-{
-    return __doapl(this, r);
+inline Complex<T>& __dami(Complex<T>* lhs, const Complex<T>& rhs) {
+    lhs->re -= rhs.re;
+    lhs->im -= rhs.im;
+    return *lhs;
+}
+
+
+// Overloading operator +=
+template <typename T>
+inline Complex<T>& Complex<T>::operator+=(const Complex<T>& other) {
+    return __dapl(this, other);
+}
+
+
+// Overloading operator -=
+template <typename T>
+inline Complex<T>& Complex<T>::operator-=(const Complex<T>& other) {
+    return __dami(this, other);
+}
+
+
+// Overloading operator +
+template <typename T>
+inline Complex<T> operator+(const Complex<T>& lhs, const Complex<T>& rhs) {
+    return Complex<T>(lhs.real() + rhs.real(), lhs.imag() + rhs.imag());
 }
 
 template <typename T>
-std::ostream& operator << (std::ostream& os, const complex<T>& x)
-{
+inline Complex<T> operator+(const Complex<T>& lhs, T rhs) {
+    return Complex<T>(lhs.real() + rhs, lhs.imag());
+}
+
+template <typename T>
+inline Complex<T> operator+(T lhs, const Complex<T>& rhs) {
+    return Complex<T>(lhs + rhs.real(), rhs.imag());
+}
+
+
+// Overloading operator -
+template <typename T>
+inline Complex<T> operator-(const Complex<T>& lhs, const Complex<T>& rhs) {
+    return Complex<T>(lhs.real() - rhs.real(), lhs.imag() - rhs.imag());
+}
+
+template <typename T>
+inline Complex<T> operator-(const Complex<T>& lhs, T rhs) {
+    return Complex<T>(lhs.real() - rhs, lhs.imag());
+}
+
+template <typename T>
+inline Complex<T> operator-(T lhs, const Complex<T>& rhs) {
+    return Complex<T>(lhs - rhs.real(), -rhs.imag());
+}
+
+template <typename T>
+inline Complex<T> operator-(const Complex<T>& x) {
+    return Complex<T>(-x.real(), -x.imag());
+}
+
+
+// Overloading operator ==
+template <typename T>
+inline bool operator==(const Complex<T>& lhs, const Complex<T>& rhs) {
+    return lhs.real() == rhs.real() && lhs.imag() == rhs.imag();
+}
+
+template <typename T>
+inline bool operator==(const Complex<T>& lhs, const T& rhs) {
+    return lhs.real() == rhs.real() && lhs.imag() == 0;
+}
+
+template <typename T>
+inline bool operator==(const T& lhs, const Complex<T>& rhs) {
+    return lhs == rhs.real() && rhs.imag() == 0;
+}
+
+
+// Overloading operator !=
+template <typename T>
+inline bool operator!=(const Complex<T>& lhs, const Complex<T>& rhs) {
+    return lhs.real() != rhs.real() || lhs.imag() != rhs.imag();
+}
+
+template <typename T>
+inline bool operator!=(const Complex<T>& lhs, const T& rhs) {
+    return lhs.real() != rhs.real() || lhs.imag() != 0;
+}
+
+template <typename T>
+inline bool operator!=(const T& lhs, const Complex<T>& rhs) {
+    return lhs != rhs.real() || rhs.imag() != 0;
+}
+
+
+// Calculating the conjugate
+template <typename T>
+inline Complex<T> getConjuate(const Complex<T>& x) {
+    return Complex<T>(x.real(), -x.imag());
+}
+
+
+// Overloading operator <<
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const Complex<T>& x) {
     return os << '(' << x.real() << ',' << x.imag() << ')';
 }
 
-#endif
+
+#endif // COMPLEX_H
